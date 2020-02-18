@@ -2,7 +2,7 @@
 
 A Python based demo context integration for Turn.io
 that returns suggested replies for display in the UI
-based on Google search results.
+based on web search results from [Duck Duck Go](https://www.duckduckgo.com).
 
 This can be run as a serverless function.
 
