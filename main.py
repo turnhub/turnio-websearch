@@ -6,7 +6,31 @@ TOKEN = os.environ.get("TOKEN")
 
 
 def search(text):
-    return ddg3.query(text).results
+    result = ddg3.query(text)
+    search_results = []
+    if result.abstract.text:
+        search_results.append(
+            {
+                "type": "TEXT",
+                "body": result.abstract.text,
+                "title": "Main Abstract",
+                "confidence": 1.0,
+            }
+        )
+
+    if result.results:
+        search_results.extend(
+            [
+                {
+                    "type": "TEXT",
+                    "body": "%s - %s" % (r.text, r.url),
+                    "title": "Search Result %s" % (index,),
+                    "confidence": ((len(result.results) - index) / 10),
+                }
+                for index, r in enumerate(result.results)
+            ]
+        )
+    return search_results
 
 
 def turnio_websearch_webhook(request):
@@ -34,7 +58,7 @@ def turnio_websearch_webhook(request):
             "to": wa_id,
             "text": {
                 "body": "\n\n".join(
-                    [f"{result.text} {result.url}" for result in results]
+                    ["*%(title)s*\n\n%(body)s" % result for result in results]
                 )
             },
         },
@@ -87,15 +111,7 @@ def turnio_websearch_context(request):
         "context_objects": {
             "language_region": {"Language": "Kashmiri", "Region": "Kashmir"}
         },
-        "suggested_responses": [
-            {
-                "type": "TEXT",
-                "title": f"search result {index}",
-                "body": f"{result.text} {result.url}",
-                "confidence": ((len(results) - index) / 10),
-            }
-            for index, result in enumerate(results)
-        ],
+        "suggested_responses": results,
     }
 
 
