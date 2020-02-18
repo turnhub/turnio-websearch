@@ -1,0 +1,4 @@
+flask
+google_search_client
+requests
+black
