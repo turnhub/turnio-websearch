@@ -1,21 +1,29 @@
 import os
 import requests
+import ddg3
 
 TOKEN = os.environ.get("TOKEN")
 
 
-def turnio_googlesearch_webhook(request):
+def search(text):
+    return ddg3.query(text).results
+
+
+def turnio_websearch_webhook(request):
     json = request.json
     if "statuses" in json:
         return ""
 
     wa_id = json["contacts"][0]["wa_id"]
-    message_id = json["messages"][0]["id"]
-    text = json["messages"][0]["text"]["body"]
+    [message] = json["messages"]
 
-    from google_search_client.search_client import GoogleSearchClient
+    if message["type"] != "text":
+        return ""
 
-    results = GoogleSearchClient().search(text).results
+    message_id = message["id"]
+    text = message["text"]["body"]
+
+    results = search(text)
     response = requests.post(
         url="https://whatsapp.turn.io/v1/messages",
         headers={
@@ -26,7 +34,7 @@ def turnio_googlesearch_webhook(request):
             "to": wa_id,
             "text": {
                 "body": "\n\n".join(
-                    [f"{result.title} {result.url}" for result in results]
+                    [f"{result.text} {result.url}" for result in results]
                 )
             },
         },
@@ -47,8 +55,7 @@ def turnio_googlesearch_webhook(request):
     return ""
 
 
-def turnio_googlesearch_context(request):
-    from google_search_client.search_client import GoogleSearchClient
+def turnio_websearch_context(request):
 
     json = request.json
     if json.get("handshake", False):
@@ -70,11 +77,11 @@ def turnio_googlesearch_context(request):
     text_messages = [m for m in json["messages"] if m["type"] == "text"]
     if text_messages:
         text = text_messages[0]["text"]["body"]
-        suggested_responses = GoogleSearchClient().search(text).results
-        print("Searching for %r returned %d results" % (text, len(suggested_responses)))
+        results = search(text)
+        print("Searching for %r returned %d results" % (text, len(results)))
     else:
         print("Most recent message was not a text message, skipping search")
-        suggested_responses = []
+        results = []
     return {
         "version": "1.0.0-alpha",
         "context_objects": {
@@ -84,10 +91,10 @@ def turnio_googlesearch_context(request):
             {
                 "type": "TEXT",
                 "title": f"search result {index}",
-                "body": f"{result.title} {result.url}",
-                "confidence": ((len(suggested_responses) - index) / 10),
+                "body": f"{result.text} {result.url}",
+                "confidence": ((len(results) - index) / 10),
             }
-            for index, result in enumerate(suggested_responses)
+            for index, result in enumerate(results)
         ],
     }
 
@@ -96,10 +103,10 @@ if __name__ == "__main__":
     from flask import Flask, request
     import functools
 
-    webhooks = functools.partial(turnio_googlesearch_webhook, request)
+    webhooks = functools.partial(turnio_websearch_webhook, request)
     webhooks.__name__ = "webhooks"
 
-    context = functools.partial(turnio_googlesearch_context, request)
+    context = functools.partial(turnio_websearch_context, request)
     context.__name__ = "context"
 
     app = Flask(__name__)

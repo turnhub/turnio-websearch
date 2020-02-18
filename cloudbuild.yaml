@@ -6,7 +6,7 @@ steps:
       - --trigger-http
       - --runtime=python37
       - --region=europe-west1
-      - turnio_googlesearch_context
+      - turnio_websearch_context
   - name: gcr.io/cloud-builders/gcloud
     args:
       - functions
@@ -14,4 +14,4 @@ steps:
       - --trigger-http
       - --runtime=python37
       - --region=europe-west1
-      - turnio_googlesearch_webhook
+      - turnio_websearch_webhook

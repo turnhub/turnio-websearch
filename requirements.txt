@@ -1,4 +1,4 @@
 flask
-google_search_client
+ddg3
 requests
 black
