@@ -71,7 +71,9 @@ def turnio_googlesearch_context(request):
     if text_messages:
         text = text_messages[0]["text"]["body"]
         suggested_responses = GoogleSearchClient().search(text).results
+        print("Searching for %r returned %d results" % (text, len(suggested_responses)))
     else:
+        print("Most recent message was not a text message, skipping search")
         suggested_responses = []
     return {
         "version": "1.0.0-alpha",
