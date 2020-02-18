@@ -98,7 +98,11 @@ def turnio_websearch_context(request):
             }
         }
 
-    text_messages = [m for m in json["messages"] if m["type"] == "text"]
+    text_messages = [
+        m
+        for m in json["messages"]
+        if m["type"] == "text" and m["_vnd"]["v1"]["direction"] == "inbound"
+    ]
     if text_messages:
         text = text_messages[0]["text"]["body"]
         results = search(text)
