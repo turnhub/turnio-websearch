@@ -1,4 +1,4 @@
-import os.environ
+import os
 import requests
 from flask import Flask, request
 
@@ -74,7 +74,12 @@ def context():
             }
         }
 
-    results = GoogleSearchClient().search("India").results
+    text_messages = [m for m in json["messages"] if m["type"] == "text"]
+    if text_messages:
+        text = text_messages[0]["text"]["body"]
+        suggested_responses = GoogleSearchClient().search(text).results
+    else:
+        suggested_responses = []
     return {
         "version": "1.0.0-alpha",
         "context_objects": {
@@ -83,10 +88,14 @@ def context():
         "suggested_responses": [
             {
                 "type": "TEXT",
-                "title": f"seach result {index}",
+                "title": f"search result {index}",
                 "body": f"{result.title} {result.url}",
-                "confidence": 0.4,
+                "confidence": ((len(suggested_responses) - index) / 10),
             }
-            for index, result in enumerate(results)
+            for index, result in enumerate(suggested_responses)
         ],
     }
+
+
+if __name__ == "__main__":
+    app.run()
