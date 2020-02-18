@@ -1,16 +1,12 @@
 import os
 import requests
-from flask import Flask, request
-
+import functools
+from flask import request
 
 TOKEN = os.environ.get("TOKEN")
 
 
-app = Flask(__name__)
-
-
-@app.route("/", methods=["POST"])
-def webhook():
+def turnio_googlesearch_webhook():
     json = request.json
     if "statuses" in json:
         return ""
@@ -53,8 +49,7 @@ def webhook():
     return ""
 
 
-@app.route("/context", methods=["POST"])
-def context():
+def turnio_googlesearch_context():
     from google_search_client.search_client import GoogleSearchClient
 
     json = request.json
@@ -98,4 +93,9 @@ def context():
 
 
 if __name__ == "__main__":
+    from flask import Flask
+
+    app = Flask(__name__)
+    app.route("/", methods=["POST"])(turnio_googlesearch_webhook)
+    app.route("/context", methods=["POST"])(turnio_googlesearch_context)
     app.run()
