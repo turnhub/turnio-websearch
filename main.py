@@ -84,6 +84,7 @@ def turnio_websearch_context(request):
     json = request.json
     if json.get("handshake", False):
         return {
+            "version": "1.0.0-alpha",
             "capabilities": {
                 "actions": False,
                 "suggested_responses": True,
